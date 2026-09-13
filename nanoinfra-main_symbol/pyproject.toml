@@ -1,0 +1,42 @@
+[project]
+name = "nanoinfra-symbol"
+version = "0.1.0"
+description = "NanoInfra Hexagon four-loop 0y fixed-base100 coefficient prediction"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+    "torch",
+    "numpy",
+    "hydra-core>=1.3",
+    "omegaconf>=2.3",
+]
+
+# Importable packages: the reusable core and the Symbol projects.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "projects.amplitude_symbol*", "projects.heptagon_symbol*", "projects.hexagon_symbol_w8_0y*"]
+namespaces = true
+
+# Hydra configuration files must ship with editable and wheel installs.
+[tool.setuptools.package-data]
+"core.configs" = ["*.yaml"]
+"projects.amplitude_symbol.configs" = ["*.yaml"]
+"projects.amplitude_symbol.experiments.word_bidi" = ["*.yaml"]
+"projects.heptagon_symbol.configs" = ["*.yaml"]
+"projects.hexagon_symbol_w8_0y.configs" = ["*.yaml"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# Optional tooling; add only what the selected workflow needs:
+#   wandb        experiment logging (Trainer no-ops to a DummyWandb without it)
+#   liger-kernel fused cross-entropy kernel (guarded import in core/model/gpt.py)
+# The official AIAmplitudes_common_public checkout is not published as a stable
+# package dependency and must be installed or placed on PYTHONPATH separately.
+[project.optional-dependencies]
+wandb = ["wandb>=0.21.3"]
+liger = ["liger-kernel"]
+reports = ["matplotlib>=3.8"]
+test = ["pytest>=8", "matplotlib>=3.8"]

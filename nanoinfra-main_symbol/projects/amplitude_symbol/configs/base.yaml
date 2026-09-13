@@ -1,0 +1,116 @@
+# base.yaml — shared defaults for all amplitude_symbol training modes.
+#
+# Vocabulary size and token types are NOT configurable here: they are
+# assembly facts from the tokenizer layout.  Changing them here would
+# silently disagree with the vocabulary and retarget every token.
+
+defaults:
+  - _self_
+
+hydra:
+  job:
+    chdir: false
+
+# ============================================================================
+# Sequence and batch
+# ============================================================================
+sequence_len: 32
+device_batch_size: 64
+total_batch_size: 2048       # tokens per step (device_batch × seq_len × world_size)
+seed: 42
+
+# ============================================================================
+# External resources. Null means: use the matching NANOINFRA_* environment
+# variable, then the historical remote-workspace layout as a compatibility
+# fallback. See projects/amplitude_symbol/paths.py.
+# ============================================================================
+data:
+  path: null
+  manifest_path: null
+  aiamplitudes_root: null
+
+# ============================================================================
+# Model — trunk geometry.  vocab_size / n_token_types are set at assembly time
+# from the tokenizer module and CANNOT be overridden in mode configs.
+# ============================================================================
+model:
+  n_layer: 4
+  n_embd: 512
+  n_head: 8
+  n_kv_head: 8
+  # vocab_size and n_token_types are injected by the orchestrator
+
+# ============================================================================
+# Training
+# ============================================================================
+max_steps: -1                # -1 = auto-calculate (Chinchilla, ratio 20)
+target_param_data_ratio: 20
+
+# ============================================================================
+# Optimizer
+# ============================================================================
+optimizer:
+  type: adamw
+  lr_max: 3.0e-4
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  fused: true
+  embedding_lr: 0.2
+  unembedding_lr: 0.004
+  scheduler:
+    type: linear
+    warmup_steps: 500
+    warmdown_ratio: 0.2
+    final_lr_frac: 0.0
+
+# ============================================================================
+# Logging
+# ============================================================================
+logging:
+  log_every: 100
+  wandb_log_every: 500
+
+# ============================================================================
+# Checkpoint
+# ============================================================================
+checkpoint:
+  enabled: false             # disabled by default; enable in baseline_orbit.yaml
+  save_every: -1
+  save_dir: "models/amplitude_symbol"
+  keep_last_n: 2
+
+# ============================================================================
+# Wandb
+# ============================================================================
+wandb:
+  enabled: false
+  project: nanoinfra
+  name: amplitude_symbol
+
+# ============================================================================
+# Data — overfit_n_samples limits the training set to the first N samples.
+# null means "use the full split".
+# ============================================================================
+overfit_n_samples: null
+
+# ============================================================================
+# Post-training verification (tiny overfit only)
+# ============================================================================
+verify: false
+
+# ============================================================================
+# Output
+# ============================================================================
+output_dir: "outputs/amplitude_symbol/${wandb.name}"
+
+# ============================================================================
+# Free-generation evaluation — runs at end of training and periodically.
+# ============================================================================
+evaluation:
+  enabled: false               # enable free-generation evaluation
+  interval_steps: 500          # run every N steps (expensive!)
+  n_samples: 256               # evaluation sample budget
+  split: val                   # which split to evaluate ("train" or "val")
+  gen_batch_size: 64           # batch size for generation
+  save_predictions: false      # save per-sample predictions to disk

@@ -1,0 +1,6 @@
+defaults:
+  - base
+  - _self_
+
+# Candidate formal run. Do not use for the requested smoke test.
+compile: false

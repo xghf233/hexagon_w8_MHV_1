@@ -1,0 +1,51 @@
+# baseline_orbit.yaml — production training on orbit-grouped split.
+#
+# Trains to Chinchilla optimal (max_steps = -1 triggers auto-calculation).
+# Uses validation for model selection; test is reserved for final evaluation
+# after the config is locked.
+#
+# D3 is used ONLY for:
+#   1. Computing orbit_id for the split
+#   2. Post-hoc evaluation diagnostics
+# It is NEVER used for augmentation, canonicalization, or loss terms.
+
+defaults:
+  - base
+  - _self_
+
+model:
+  n_layer: 4
+  n_embd: 512
+  n_head: 8
+  n_kv_head: 8
+
+wandb:
+  name: "baseline_orbit"
+
+max_steps: -1                  # auto-calculate (Chinchilla ratio 20)
+device_batch_size: 64
+total_batch_size: 2048
+
+optimizer:
+  lr_max: 3.0e-4
+  weight_decay: 0.01
+  scheduler:
+    warmup_steps: 500
+
+checkpoint:
+  enabled: true
+  save_every: 2000
+  save_dir: "models/amplitude_symbol"
+
+logging:
+  log_every: 100
+
+# Evaluation runs on the VALIDATION split at intervals.
+# Test evaluation runs ONCE after the config is locked and training is done.
+evaluation:
+  enabled: true
+  interval_steps: 5000         # ~26 evals over 133K steps (~2.5 min each)
+  n_samples: 512               # fixed val subset, selected by complete orbits
+  split: val
+  gen_batch_size: 64
+  save_predictions: false      # only save for final test eval

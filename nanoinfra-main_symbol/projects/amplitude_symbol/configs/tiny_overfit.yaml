@@ -1,0 +1,28 @@
+# tiny_overfit.yaml — 64-sample overfit test.
+#
+# Deliberately aggressive parameters: high LR, no weight decay,
+# small batch, tiny model.  The goal is to drive loss to exactly zero
+# and verify the full pipeline (data → train → generate → decode).
+
+defaults:
+  - base
+  - _self_
+
+model:
+  n_layer: 3
+  n_embd: 256
+  n_head: 4
+  n_kv_head: 4
+
+max_steps: 3000
+device_batch_size: 8
+total_batch_size: 256          # 8 × 32
+
+optimizer:
+  lr_max: 1.0e-3
+  weight_decay: 0.0            # no regularisation for overfitting
+  scheduler:
+    warmup_steps: 150
+    warmdown_ratio: 0.1
+
+overfit_n_samples: 64

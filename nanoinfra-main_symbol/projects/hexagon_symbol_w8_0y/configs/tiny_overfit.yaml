@@ -1,0 +1,24 @@
+defaults:
+  - base
+  - _self_
+
+compile: false
+device_batch_size: 32
+total_batch_size: 512
+max_steps: 1000
+overfit_n_samples: 32
+require_overfit_exact: true
+optimizer:
+  scheduler:
+    warmup_steps: 20
+evaluation:
+  subset_size: 32
+  interval_steps: 100
+  full_interval_steps: 1000
+  full_validation: false
+  gen_batch_size: 32
+  train_diagnostic_size: 32
+checkpoint:
+  save_every: 500
+logging:
+  log_every: 10

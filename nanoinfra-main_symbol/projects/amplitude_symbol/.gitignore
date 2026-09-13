@@ -1,0 +1,4 @@
+# Generated split manifest (reproducible from data + seed)
+MANIFEST.json
+overfit_history.json
+overfit_curve.png

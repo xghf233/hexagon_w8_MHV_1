@@ -1,0 +1,61 @@
+defaults:
+  - override hydra/job_logging: disabled
+  - override hydra/hydra_logging: disabled
+  - _self_
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: .
+  output_subdir: null
+
+# Required server paths. Every invocation, including resume, uses a NEW output dir.
+data_dir: ???
+output_dir: ???
+resume_from: null
+# Stop this invocation early without changing the full LR schedule horizon.
+stop_after_steps: null
+
+sequence_len: 16
+device_batch_size: 512
+total_batch_size: 8192  # nominal only; actual input length is 15
+seed: 42
+compile: false
+head_softcap: 15.0
+model:
+  n_layer: 4
+  n_embd: 512
+  n_head: 8
+  n_kv_head: 8
+max_steps: 73008  # ceil(100 * 373800 / 512), no Chinchilla auto-sizing
+overfit_n_samples: null
+require_overfit_exact: false
+
+optimizer:
+  type: adamw
+  lr_max: 0.0003
+  embedding_lr: 0.2
+  unembedding_lr: 0.004
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  fused: true
+  max_grad_norm: 1.0
+  scheduler:
+    type: linear
+    warmup_steps: 500
+    warmdown_ratio: 0.2
+    final_lr_frac: 0.0
+
+evaluation:
+  subset_size: 4096
+  subset_seed: 20260907
+  interval_steps: 3650
+  full_interval_steps: 18250
+  full_validation: true
+  gen_batch_size: 64
+  train_diagnostic_size: 256
+checkpoint:
+  save_every: 3650
+logging:
+  log_every: 100

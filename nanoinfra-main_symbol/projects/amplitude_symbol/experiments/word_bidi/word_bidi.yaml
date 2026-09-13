@@ -1,0 +1,103 @@
+# word_bidi.yaml — word-bidirectional attention experiment
+#
+# Positions 1–10 (word letters) see each other fully while everything
+# else stays standard causal.  Same model geometry as baseline_orbit
+# but with the bidirectional word-region attention mask.
+#
+# Differences from baseline:
+#   - attention:    word-bidirectional mask  (vs. standard causal)
+#   - compile:      true                     (vs. false)
+#   - batch:        512 / 16384 tokens       (vs. 64 / 2048, for better MFU)
+#   - max_steps:    500,000                  (vs. 133,015 auto-calc)
+#   - warmdown:     20%                      (same as baseline)
+#   - checkpoints:  keep 50                  (vs. keep 2, for learning curve)
+#
+# NOTE: Hydra _self_ replaces entire dicts, so all keys needed by
+# blocks/training.py must be listed explicitly.
+
+defaults:
+  - ../../configs/base
+  - _self_
+
+hydra:
+  job:
+    chdir: false
+
+# ------------------------------------------------------------------
+# Model geometry
+# ------------------------------------------------------------------
+model:
+  n_layer: 4
+  n_embd: 512
+  n_head: 8
+  n_kv_head: 8
+
+# ------------------------------------------------------------------
+# Sequence / batch / training length
+# ------------------------------------------------------------------
+sequence_len: 32
+seed: 42
+
+# 500K steps × 16,384 tok/step ≈ 8.2B tokens ≈ 30× Chinchilla.
+max_steps: 500000
+device_batch_size: 512
+total_batch_size: 16384
+compile: true
+
+# ------------------------------------------------------------------
+# Optimizer (all keys required — _self_ replaces base's dict)
+# ------------------------------------------------------------------
+optimizer:
+  type: adamw
+  lr_max: 3.0e-4
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  fused: true
+  embedding_lr: 0.2
+  unembedding_lr: 0.004
+  scheduler:
+    type: linear
+    warmup_steps: 500
+    warmdown_ratio: 0.2
+    final_lr_frac: 0.0
+
+# ------------------------------------------------------------------
+# Logging
+# ------------------------------------------------------------------
+logging:
+  log_every: 100
+  wandb_log_every: 100
+
+# ------------------------------------------------------------------
+# Checkpoints
+# ------------------------------------------------------------------
+checkpoint:
+  enabled: true
+  save_every: 10000
+  save_dir: "models/amplitude_symbol/word_bidi"
+  keep_last_n: 50
+
+# ------------------------------------------------------------------
+# Evaluation
+# ------------------------------------------------------------------
+evaluation:
+  enabled: true
+  interval_steps: 20000
+  n_samples: 512
+  split: val
+  gen_batch_size: 64
+  save_predictions: false
+
+# ------------------------------------------------------------------
+# Wandb (disabled by default; set enabled: true to use)
+# ------------------------------------------------------------------
+wandb:
+  enabled: false
+  name: "word_bidi"
+
+# IMPORTANT: change wandb.name or add a timestamp before each run,
+# otherwise wandb logs and evaluation JSONs will overwrite the
+# previous run.  Example:
+#   wandb:
+#     name: "word_bidi_2026-08-07"

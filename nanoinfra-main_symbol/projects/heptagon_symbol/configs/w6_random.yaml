@@ -1,0 +1,6 @@
+defaults:
+  - base
+  - _self_
+
+# Enable only after uncompiled smoke and a separate compiled smoke pass remotely.
+compile: true

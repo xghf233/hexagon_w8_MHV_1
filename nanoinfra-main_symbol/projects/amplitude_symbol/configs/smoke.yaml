@@ -1,0 +1,46 @@
+# smoke.yaml — short training run on the full orbit-grouped train split.
+#
+# Verifies the full pipeline (data → train → generate → evaluate) on real
+# data without spending a full compute budget.
+#
+# Budget: ~500 steps, ≤ 30 min on RTX 5090.
+
+defaults:
+  - base
+  - _self_
+
+model:
+  n_layer: 4
+  n_embd: 512
+  n_head: 8
+  n_kv_head: 8
+
+max_steps: 500
+device_batch_size: 64
+total_batch_size: 2048         # 64 × 32
+
+# No warmup for smoke — just run at full LR to see the loss trend
+optimizer:
+  scheduler:
+    warmup_steps: 0
+    warmdown_ratio: 0.0
+
+logging:
+  log_every: 50
+
+checkpoint:
+  enabled: true
+  save_every: 500              # save at end of training
+  save_dir: "models/amplitude_symbol/smoke"
+
+wandb:
+  name: "smoke_run"
+
+# Run one free-generation evaluation at end of training
+evaluation:
+  enabled: true
+  interval_steps: 500          # only at the end
+  n_samples: 256               # small subset for speed
+  split: val
+  gen_batch_size: 64
+  save_predictions: true

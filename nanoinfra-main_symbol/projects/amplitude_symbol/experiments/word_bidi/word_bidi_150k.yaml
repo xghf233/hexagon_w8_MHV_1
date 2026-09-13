@@ -1,0 +1,116 @@
+# word_bidi_150k.yaml — word-bidirectional attention, 150K-step budget
+#
+# Same model geometry, batch, optimizer, and attention mask as word_bidi.yaml
+# (the 500K run of 2026-08-07).  The ONLY deliberately changed variables are
+# training length and the output locations:
+#
+#   - max_steps: 150,000  (was 500,000) — ~364 epochs over the train set,
+#     past the val plateau (~140K in the 500K run) with a 10K margin.
+#   - warmdown_ratio stays 0.2, so warmdown automatically runs
+#     120,000 -> 150,000 (last 30K steps).  This is the "annealed 150K"
+#     checkpoint the 500K run cannot provide: its 140K/160K checkpoints were
+#     taken during constant LR (its warmdown started at 400K).
+#   - save_dir / wandb.name / output_dir point at NEW directories.
+#     DO NOT point them at models/amplitude_symbol/word_bidi/ or the
+#     word_bidi_2026-08-07 outputs: checkpoints and eval JSONs are named by
+#     step number, and the framework rmtree's an existing step_XXXXXX before
+#     saving — reusing the old paths would silently destroy the 500K run's
+#     artifacts.
+#
+# Periodic evaluation stays on the fixed first-512 val samples (identical to
+# the 500K run's eval set) so the two learning curves are directly comparable.
+# The large-set comparison is a separate post-training step — see
+# projects/amplitude_symbol/eval_checkpoint.py.
+#
+# NOTE: Hydra _self_ replaces entire dicts, so all keys needed by
+# blocks/training.py must be listed explicitly.
+
+defaults:
+  - ../../configs/base
+  - _self_
+
+hydra:
+  job:
+    chdir: false
+
+# ------------------------------------------------------------------
+# Model geometry (identical to the 500K run)
+# ------------------------------------------------------------------
+model:
+  n_layer: 4
+  n_embd: 512
+  n_head: 8
+  n_kv_head: 8
+
+# ------------------------------------------------------------------
+# Sequence / batch / training length
+# ------------------------------------------------------------------
+sequence_len: 32
+seed: 42
+
+# 150K steps x 16,384 tok/step ≈ 2.5B tokens ≈ 180x params ≈ 364 epochs.
+# Warmdown 20% = last 30K steps (120K -> 150K).
+max_steps: 150000
+device_batch_size: 512
+total_batch_size: 16384
+compile: true
+
+# ------------------------------------------------------------------
+# Optimizer (all keys required — _self_ replaces base's dict)
+# ------------------------------------------------------------------
+optimizer:
+  type: adamw
+  lr_max: 3.0e-4
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  fused: true
+  embedding_lr: 0.2
+  unembedding_lr: 0.004
+  scheduler:
+    type: linear
+    warmup_steps: 500
+    warmdown_ratio: 0.2      # 0.2 x 150K = 30K-step warmdown, starts at 120K
+    final_lr_frac: 0.0
+
+# ------------------------------------------------------------------
+# Logging
+# ------------------------------------------------------------------
+logging:
+  log_every: 100
+  wandb_log_every: 100
+
+# ------------------------------------------------------------------
+# Checkpoints — NEW save_dir so the 500K run's 50 checkpoints stay intact
+# ------------------------------------------------------------------
+checkpoint:
+  enabled: true
+  save_every: 10000
+  save_dir: "models/amplitude_symbol/word_bidi_150k"
+  keep_last_n: 15
+
+# ------------------------------------------------------------------
+# Evaluation — same fixed first-512 val samples as the 500K run, so the
+# periodic curves are directly comparable.  The large-set final comparison
+# is run separately with eval_checkpoint.py after training.
+# ------------------------------------------------------------------
+evaluation:
+  enabled: true
+  interval_steps: 20000
+  n_samples: 512
+  split: val
+  gen_batch_size: 64
+  save_predictions: false
+
+# ------------------------------------------------------------------
+# Wandb (disabled by default; set enabled: true to use)
+# ------------------------------------------------------------------
+wandb:
+  enabled: false
+  name: "word_bidi_150k_2026-08-17"
+
+# ------------------------------------------------------------------
+# Output — explicit NEW directory (kept in sync with wandb.name above;
+# both must differ from the 500K run's word_bidi_2026-08-07).
+# ------------------------------------------------------------------
+output_dir: "outputs/amplitude_symbol/word_bidi_150k_2026-08-17"
