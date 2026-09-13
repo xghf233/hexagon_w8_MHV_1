@@ -15,7 +15,7 @@ dependencies = [
 # Importable packages: the reusable core and the Symbol projects.
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["core*", "projects.amplitude_symbol*", "projects.heptagon_symbol*", "projects.hexagon_symbol_w8_0y*"]
+include = ["core*", "projects.amplitude_symbol*", "projects.heptagon_symbol*", "projects.hexagon_symbol_w8_0y*", "projects.hexagon_c2_a3*"]
 namespaces = true
 
 # Hydra configuration files must ship with editable and wheel installs.
@@ -25,6 +25,7 @@ namespaces = true
 "projects.amplitude_symbol.experiments.word_bidi" = ["*.yaml"]
 "projects.heptagon_symbol.configs" = ["*.yaml"]
 "projects.hexagon_symbol_w8_0y.configs" = ["*.yaml"]
+"projects.hexagon_c2_a3.configs" = ["*.yaml"]
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -1,0 +1,5 @@
+defaults:
+  - base
+  - _self_
+
+# Separate authorization/phase after GPU smoke and tiny-overfit. Fresh initialization.

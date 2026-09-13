@@ -29,6 +29,10 @@
 - [完整改造计划及当前范围](HEXAGON_W8_0Y_ADAPTATION_PLAN.md)。
 - [快照来源与排除项](SNAPSHOT_PROVENANCE.md)。
 
+新增独立任务（2026-09-14）：[相邻 y 的 M2/38 系数预测](nanoinfra-main_symbol/projects/hexagon_c2_a3/README.md)。
+其本地候选实现已写、尚未执行 GPU 验收；与本页旧 0y 任务共享 GPT 类，不共享权重。
+新任务请使用自己的交接文档；本页原有 0y 配置和历史状态保持不变。
+
 下一阶段只先运行交接文档中的 GPU smoke。它不自动启动 tiny-overfit、正式训练或最终 test。
 random-row 允许同一 S3 轨道跨 split，结果不能称为 orbit-grouped 泛化。
 
